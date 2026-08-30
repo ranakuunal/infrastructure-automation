@@ -1,3 +1,7 @@
+#--------
+# VPC.TF
+#--------
+
 output "vpc_id" {
   value = aws_vpc.main.id
 }
@@ -18,4 +22,23 @@ output "private_subnet_ids" {
 
 output "nat_gateway_id" {
   value = aws_nat_gateway.main.id
+}
+
+#-------------------
+# Security-Group.tf
+#-------------------
+
+output "mongodb_security_group_id" {
+  description = "Security group ID for MongoDB"
+  value       = aws_security_group.mongodb.id
+}
+
+output "eks_nodes_security_group_id" {
+  description = "Security group ID for EKS worker nodes"
+  value       = aws_security_group.eks_nodes.id
+}
+
+output "app_lb_security_group_id" {
+  description = "Security group Id for application load balancer"
+  value       = aws_security_group.app_lb.id
 }

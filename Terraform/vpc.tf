@@ -7,17 +7,13 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
   enable_dns_hostnames = true
 
-  tags = merge(local.common_tags, {
-    Name = "${var.project_name}-vpc"
-  })
+  tags = local.common_tags
 }
 
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
-  tags = merge(local.common_tags, {
-    Name = "${var.project_name}-igw"
-  })
+  tags = local.common_tags
 }
 
 resource "aws_subnet" "public_subnet1" {
@@ -27,7 +23,6 @@ resource "aws_subnet" "public_subnet1" {
   map_public_ip_on_launch = true
 
   tags = merge(local.common_tags, {
-    Name                     = "${var.project_name}-public-subnet1"
     "kubernetes.io/role/elb" = "1"
   })
 }
@@ -39,7 +34,6 @@ resource "aws_subnet" "public_subnet2" {
   map_public_ip_on_launch = true
 
   tags = merge(local.common_tags, {
-    Name                     = "${var.project_name}-public-subnet2"
     "kubernetes.io/role/elb" = "1"
   })
 }
@@ -50,7 +44,6 @@ resource "aws_subnet" "private_subnet1" {
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = merge(local.common_tags, {
-    Name                              = "${var.project_name}-private-subnet1"
     "kubernetes.io/role/internal-elb" = "1"
   })
 }
@@ -61,7 +54,6 @@ resource "aws_subnet" "private_subnet2" {
   availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = merge(local.common_tags, {
-    Name                              = "${var.project_name}-private-subnet2"
     "kubernetes.io/role/internal-elb" = "1"
   })
 }
@@ -69,9 +61,7 @@ resource "aws_subnet" "private_subnet2" {
 resource "aws_eip" "nat" {
   domain = "vpc"
 
-  tags = merge(local.common_tags, {
-    Name = "${var.project_name}-nat-eip"
-  })
+  tags = local.common_tags
 }
 
 resource "aws_nat_gateway" "main" {
@@ -80,9 +70,7 @@ resource "aws_nat_gateway" "main" {
 
   depends_on = [aws_internet_gateway.main]
 
-  tags = merge(local.common_tags, {
-    Name = "${var.project_name}-nat-gateway"
-  })
+  tags = local.common_tags
 }
 
 resource "aws_route_table" "public_rt" {
@@ -93,9 +81,7 @@ resource "aws_route_table" "public_rt" {
     gateway_id = aws_internet_gateway.main.id
   }
 
-  tags = merge(local.common_tags, {
-    Name = "${var.project_name}-public-rt"
-  })
+  tags = local.common_tags
 }
 
 resource "aws_route_table" "private_rt" {
@@ -106,9 +92,7 @@ resource "aws_route_table" "private_rt" {
     nat_gateway_id = aws_nat_gateway.main.id
   }
 
-  tags = merge(local.common_tags, {
-    Name = "${var.project_name}-private-rt"
-  })
+  tags = local.common_tags
 }
 
 resource "aws_route_table_association" "public_subnet1" {
@@ -130,4 +114,3 @@ resource "aws_route_table_association" "private_subnet2" {
   subnet_id      = aws_subnet.private_subnet2.id
   route_table_id = aws_route_table.private_rt.id
 }
-
