@@ -20,8 +20,8 @@ permissions:
   contents: read
 
 env:
-AWS_REGION: us-east-1
-TF_IN_AUTOMATION: true
+  AWS_REGION: us-east-1
+  TF_IN_AUTOMATION: true
 
 jobs:
   terraform:
