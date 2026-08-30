@@ -64,7 +64,7 @@ jobs:
         run: terraform validate
       
       - name: Terraform Plan
-        run: terraform plan -input=false out=tfplan
+        run: terraform plan -input=false -out=tfplan
       
       - name: Terraform Apply
         if: github.event_name == 'workflow_dispatch' && inputs.apply == true
