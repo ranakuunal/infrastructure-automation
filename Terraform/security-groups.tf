@@ -7,7 +7,9 @@ resource "aws_security_group" "mongodb" {
   description = "Security Group for MongoDB EC2 instance"
   vpc_id      = aws_vpc.main.id
 
-  tags = local.common_tags
+  tags = merge(local.common_tags, {
+    Name = "${var.project_name}-mongodb-sg"
+  })
 }
 
 #-----------------
@@ -19,7 +21,9 @@ resource "aws_security_group" "eks_nodes" {
   description = "Security Group for EKS worker nodes"
   vpc_id      = aws_vpc.main.id
 
-  tags = local.common_tags
+  tags = merge(local.common_tags, {
+    Name = "${var.project_name}-eks-nodes-sg"
+  })
 }
 
 #------------------------------
@@ -31,7 +35,9 @@ resource "aws_security_group" "app_lb" {
   description = "Security Group for Application Load Balancer"
   vpc_id      = aws_vpc.main.id
 
-  tags = local.common_tags
+  tags = merge(local.common_tags, {
+    Name = "${var.project_name}-app-lb-sg"
+  })
 }
 
 #------------------------------------

@@ -42,3 +42,22 @@ output "app_lb_security_group_id" {
   description = "Security group Id for application load balancer"
   value       = aws_security_group.app_lb.id
 }
+
+#---------
+# EC2.TF
+#---------
+
+output "mongodb_instance_id" {
+  description = "MongoDB EC2 instance ID"
+  value       = aws_instance.mongodb.id
+}
+
+output "mongodb_public_ip" {
+  description = "Public IP address of MongoDB EC2 instance"
+  value       = aws_instance.mongodb.public_ip
+}
+
+output "mongodb_private_ip" {
+  description = "Private IP address of MongoDB EC2 instance"
+  value       = aws_instance.mongodb.private_ip
+}
