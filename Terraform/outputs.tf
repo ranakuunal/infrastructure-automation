@@ -61,3 +61,8 @@ output "mongodb_private_ip" {
   description = "Private IP address of MongoDB EC2 instance"
   value       = aws_instance.mongodb.private_ip
 }
+
+output "mongodb_data_volume_id" {
+  description = "Persistent EBS volume storing MongoDB data"
+  value       = aws_ebs_volume.mongodb_data.id
+}
