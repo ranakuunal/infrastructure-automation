@@ -12,20 +12,6 @@ resource "aws_security_group" "mongodb" {
   })
 }
 
-#-----------------
-# EKS nodes SG
-#-----------------
-
-resource "aws_security_group" "eks_nodes" {
-  name        = "${var.project_name}-eks-nodes-sg"
-  description = "Security Group for EKS worker nodes"
-  vpc_id      = aws_vpc.main.id
-
-  tags = merge(local.common_tags, {
-    Name = "${var.project_name}-eks-nodes-sg"
-  })
-}
-
 #------------------------------
 # Application Load Balancer SG
 #------------------------------
@@ -69,25 +55,18 @@ resource "aws_vpc_security_group_egress_rule" "app_lb_all" {
   ip_protocol = "-1"
 }
 
-#---------------------
-# EKS Nodes SG Rules
-#---------------------
+#---------------
+# EKS SG Rules
+#---------------
 
-resource "aws_vpc_security_group_ingress_rule" "eks_nodes_from_lb" {
-  security_group_id = aws_security_group.eks_nodes.id
+resource "aws_vpc_security_group_ingress_rule" "eks_from_app_lb" {
+  security_group_id = aws_eks_cluster.main.vpc_config[0].cluster_security_group_id
 
   referenced_security_group_id = aws_security_group.app_lb.id
 
   from_port   = 8080
   to_port     = 8080
   ip_protocol = "tcp"
-}
-
-resource "aws_vpc_security_group_egress_rule" "eks_nodes_all" {
-  security_group_id = aws_security_group.eks_nodes.id
-
-  cidr_ipv4   = "0.0.0.0/0"
-  ip_protocol = "-1"
 }
 
 #------------------
@@ -97,7 +76,7 @@ resource "aws_vpc_security_group_egress_rule" "eks_nodes_all" {
 resource "aws_vpc_security_group_ingress_rule" "mongodb_from_eks" {
   security_group_id = aws_security_group.mongodb.id
 
-  referenced_security_group_id = aws_security_group.eks_nodes.id
+  referenced_security_group_id = aws_eks_cluster.main.vpc_config[0].cluster_security_group_id
 
   from_port   = 27017
   to_port     = 27017
