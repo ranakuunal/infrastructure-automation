@@ -80,3 +80,12 @@ output "mongodb_backup_bucket_url" {
   description = "Public URL for the MongoDB backup bucket"
   value       = "https://${aws_s3_bucket.mongodb_backups.bucket}.s3.amazonaws.com"
 }
+
+#---------
+# ECR.TF
+#---------
+
+output "tasky_ecr_repository_url" {
+  description = "ECR repository URL for the Tasky application"
+  value       = aws_ecr_repository.tasky.repository_url
+}
