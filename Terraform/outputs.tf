@@ -39,7 +39,7 @@ output "eks_nodes_security_group_id" {
 }
 
 output "app_lb_security_group_id" {
-  description = "Security group Id for application load balancer"
+  description = "Security group ID for application load balancer"
   value       = aws_security_group.app_lb.id
 }
 
@@ -65,4 +65,18 @@ output "mongodb_private_ip" {
 output "mongodb_data_volume_id" {
   description = "Persistent EBS volume storing MongoDB data"
   value       = aws_ebs_volume.mongodb_data.id
+}
+
+#--------
+# S3.TF
+#--------
+
+output "mongodb_backup_bucket_name" {
+  description = "Public S3 bucket containing MongoDB backups"
+  value       = aws_s3_bucket.mongodb_backups.bucket
+}
+
+output "mongodb_backup_bucket_url" {
+  description = "Public URL for the MongoDB backup bucket"
+  value       = "https://${aws_s3_bucket.mongodb_backups.bucket}.s3.amazonaws.com"
 }
