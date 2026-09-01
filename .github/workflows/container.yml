@@ -1,0 +1,79 @@
+name: Container Build CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "App/**"
+      - ".github/workflows/container.yml"
+  
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: wiz-exercise-tasky
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.CI_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.CI_AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ vars.DEPLOYMENT_ROLE_ARN }}
+          role-session-name: github-actions-tasky-container
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Build Container Image
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: tasky-v${{ github.run_number }}
+        run: |
+          docker build \
+            --platform linux/amd64 \
+            -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" \
+            ./App
+      
+      - name: Verify wizexercise.txt
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: tasky-v${{ github.run_number }}
+        run: |
+          docker run --rm \
+            --platform linux/amd64 \
+            --entrypoint sh \
+            "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" \
+            -c 'test -s /app/wizexercise.txt && cat /app/wizexercise.txt'
+      
+      - name: Push Image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: tasky-v${{ github.run_number }}
+        run: |
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+      
+      - name: Verify Image in ECR
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: tasky-v${{ github.run_number }}
+        run: |
+          echo "Pushed:"
+          echo "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          aws ecr describe-images \
+            --repository-name "$ECR_REPOSITORY" \
+            --image-ids imageTag="$IMAGE_TAG" \
+            --region "$AWS_REGION"
