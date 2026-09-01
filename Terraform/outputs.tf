@@ -108,3 +108,12 @@ output "eks_node_group_name" {
   description = "EKS managed node group name"
   value       = aws_eks_node_group.main.node_group_name
 }
+
+#--------------------
+# ALB-CONTROLLER.TF
+#--------------------
+
+output "aws_load_balancer_controller_role_arn" {
+  description = "IAM role ARN used by the AWS Load Balancer Controller"
+  value       = aws_iam_role.aws_load_balancer_controller.arn
+}
