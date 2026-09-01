@@ -7,8 +7,19 @@ on:
     paths:
       - "App/**"
       - ".github/workflows/container.yml"
-  
+
   workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Image tag to publish, e.g. tasky-v2"
+        required: true
+        type: string
+
+      push_to_ecr:
+        description: "Push validated image to ECR"
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -24,8 +35,28 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
+      - name: Build Container Image
+        env:
+          IMAGE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.image_tag || 'tasky-ci-validation' }}
+        run: |
+          docker build \
+            --platform linux/amd64 \
+            -t "$ECR_REPOSITORY:$IMAGE_TAG" \
+            ./App
+
+      - name: Verify wizexercise.txt
+        env:
+          IMAGE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.image_tag || 'tasky-ci-validation' }}
+        run: |
+          docker run --rm \
+            --platform linux/amd64 \
+            --entrypoint sh \
+            "$ECR_REPOSITORY:$IMAGE_TAG" \
+            -c 'test -s /app/wizexercise.txt && cat /app/wizexercise.txt'
+
       - name: Configure AWS credentials
+        if: github.event_name == 'workflow_dispatch' && inputs.push_to_ecr == true
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.CI_AWS_ACCESS_KEY_ID }}
@@ -34,46 +65,39 @@ jobs:
           role-session-name: github-actions-tasky-container
           role-skip-session-tagging: true
           aws-region: ${{ env.AWS_REGION }}
-      
+
       - name: Login to Amazon ECR
+        if: github.event_name == 'workflow_dispatch' && inputs.push_to_ecr == true
         id: ecr-login
         uses: aws-actions/amazon-ecr-login@v2
-      
-      - name: Build Container Image
+
+      - name: Tag Image for ECR
+        if: github.event_name == 'workflow_dispatch' && inputs.push_to_ecr == true
         env:
           ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
-          IMAGE_TAG: tasky-v${{ github.run_number }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
         run: |
-          docker build \
-            --platform linux/amd64 \
-            -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" \
-            ./App
-      
-      - name: Verify wizexercise.txt
-        env:
-          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
-          IMAGE_TAG: tasky-v${{ github.run_number }}
-        run: |
-          docker run --rm \
-            --platform linux/amd64 \
-            --entrypoint sh \
-            "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" \
-            -c 'test -s /app/wizexercise.txt && cat /app/wizexercise.txt'
-      
+          docker tag \
+            "$ECR_REPOSITORY:$IMAGE_TAG" \
+            "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
       - name: Push Image to ECR
+        if: github.event_name == 'workflow_dispatch' && inputs.push_to_ecr == true
         env:
           ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
-          IMAGE_TAG: tasky-v${{ github.run_number }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
         run: |
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-      
+
       - name: Verify Image in ECR
+        if: github.event_name == 'workflow_dispatch' && inputs.push_to_ecr == true
         env:
           ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
-          IMAGE_TAG: tasky-v${{ github.run_number }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
         run: |
-          echo "Pushed:"
+          echo "Published image:"
           echo "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
           aws ecr describe-images \
             --repository-name "$ECR_REPOSITORY" \
             --image-ids imageTag="$IMAGE_TAG" \
