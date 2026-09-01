@@ -57,20 +57,12 @@ resource "aws_iam_instance_profile" "mongodb" {
   })
 }
 
-#------
-# AMI
-#------
-
-data "aws_ssm_parameter" "amazon_linux_2" {
-  name = "/aws/service/ami-amazon-linux-latest/amzn2-ami-kernel-default-hvm-x86_64-gp2"
-}
-
 #-----------------------
 # MongoDB EC2 Instance
 #-----------------------
 
 resource "aws_instance" "mongodb" {
-  ami           = data.aws_ssm_parameter.amazon_linux_2.value
+  ami           = "ami-0e950679440b6b396"
   instance_type = "t3.small"
 
   subnet_id                   = aws_subnet.public_subnet1.id
