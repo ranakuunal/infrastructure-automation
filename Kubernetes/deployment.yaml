@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tasky
+  namespace: tasky
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tasky
+  template:
+    metadata:
+      labels:
+        app: tasky
+    spec:
+      serviceAccountName: tasky
+      containers:
+        - name: tasky
+          image: 583067668053.dkr.ecr.us-east-1.amazonaws.com/wiz-exercise-tasky:tasky-v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: tasky-secrets
+                  key: MONGODB_URI
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: tasky-secrets
+                  key: SECRET_KEY

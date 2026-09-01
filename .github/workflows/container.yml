@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: "Image tag to publish, e.g. tasky-v2"
+        description: "Enter Image Tag"
         required: true
         type: string
 
